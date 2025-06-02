@@ -6,7 +6,7 @@ Este repositório contém o código-fonte de um gerador de malhas estruturadas e
 > **Escopo:**  
 > GridMaker foi projetado **unicamente** para criar malhas estruturadas (grids) e não avançará além dessa funcionalidade. O objetivo é ser utilizado por quem está começando no desenvolvimento de modelos em volumes finitos.
 
-Toda a documentação e comentários no código seguem o padrão Doxygen e estão em inglês, quando aplicável. A documentação geral (fora do código) está em português.
+Toda a documentação e comentários no código seguem o padrão Doxygen e estão em português.
 
 ---
 
