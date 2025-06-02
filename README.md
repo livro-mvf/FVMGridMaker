@@ -1,45 +1,45 @@
-# Structured Mesh Generator (GridMaker)
+# Gerador de Malhas Estruturadas (GridMaker)
 
-## Description
-This repository contains the source code for a C++20 structured mesh generator named **GridMaker**, developed to accompany a book on finite volume methods. GridMaker provides a simple and flexible way to construct 1D and 2D (Cartesian, polar) meshes—and will later extend to 3D—without any external dependencies beyond the C++ standard library. Whenever possible, C++20 parallelization features are used to accelerate mesh generation.
+## Descrição
+Este repositório contém o código-fonte de um gerador de malhas estruturadas em C++20 chamado **GridMaker**, desenvolvido para acompanhar um livro sobre métodos de volumes finitos. O GridMaker fornece uma forma simples e flexível de construir malhas 1D e 2D (cartesiana, polar) — e futuramente 3D — sem dependências externas além da biblioteca padrão do C++. Sempre que possível, utilizam-se recursos de paralelização do C++20 para acelerar a geração da malha.
 
-> **Scope:**  
-> GridMaker is designed **solely** to create structured meshes (grids) and will not advance beyond this functionality. Its purpose is to be used by individuals who are beginning to develop finite volume models.
+> **Escopo:**  
+> GridMaker foi projetado **unicamente** para criar malhas estruturadas (grids) e não avançará além dessa funcionalidade. O objetivo é ser utilizado por quem está começando no desenvolvimento de modelos em volumes finitos.
 
-All documentation and comments in the code follow the Doxygen standard and are written in English where applicable, while general documentation (outside code) is presented in Portuguese.
-
----
-
-## Main Features
-- **1D and 2D Structured Meshes**  
-  - Uniform Cartesian mesh (X, Y).  
-  - Polar mesh in 2D.  
-- **3D Extensibility** (planned for future releases).  
-- **Modern C++20 Design**  
-  - Use of templates and concepts to handle dimensions and coordinates.  
-  - STL containers (`std::vector`, `std::array`) and parallel algorithms.  
-- **Modular Organization**  
-  - Each mesh type is organized in its own folder.  
-  - Easy to add new discretization schemes or export formats.  
-- **VTK Export for Visualization**  
-  - Mesh output compatible with ParaView and VisIt.  
-- **Documentation**  
-  - Doxygen comments throughout the code.  
-  - Automatic HTML generation via Doxygen.
+Toda a documentação e comentários no código seguem o padrão Doxygen e estão em inglês, quando aplicável. A documentação geral (fora do código) está em português.
 
 ---
 
-## Dependencies
-- **C++20 Compiler** (GCC ≥ 10, Clang ≥ 10, or MSVC with C++20 support).  
+## Principais Funcionalidades
+- **Malhas Estruturadas 1D e 2D**  
+  - Malha uniforme cartesiana (X, Y).  
+  - Malha polar em 2D.  
+- **Extensibilidade para 3D** (planejado para versões futuras).  
+- **Design Moderno em C++20**  
+  - Uso de templates e concepts para tratar dimensões e coordenadas.  
+  - Contêineres da STL (`std::vector`, `std::array`) e algoritmos paralelos.  
+- **Organização Modular**  
+  - Cada tipo de malha fica em sua própria pasta.  
+  - Fácil adicionar novos esquemas de discretização ou formatos de exportação.  
+- **Exportação para VTK (Visualização)**  
+  - Saída de malha compatível com ParaView e VisIt.  
+- **Documentação**  
+  - Comentários Doxygen espalhados pelo código.  
+  - Geração automática de HTML via Doxygen.
+
+---
+
+## Dependências
+- **Compilador C++20** (GCC ≥ 10, Clang ≥ 10 ou MSVC com suporte a C++20).  
 - **CMake** ≥ 3.15  
-- **Doxygen** (if documentation generation is needed).  
-- **Standard STL** (no external libraries required).
+- **Doxygen** (se for gerar documentação).  
+- **Biblioteca STL padrão** (sem bibliotecas externas adicionais).
 
 ---
 
-## Build Instructions
+## Como Compilar
 
-1. Clone this repository:
+1. Clone este repositório:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/GridMaker.git
+   git clone https://github.com/SEU_USUARIO/GridMaker.git
    cd GridMaker
