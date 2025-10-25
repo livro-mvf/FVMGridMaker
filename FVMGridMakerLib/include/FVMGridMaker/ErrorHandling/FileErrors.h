@@ -5,14 +5,24 @@
 // Description: Erros de E/S (File) + especialização de ErrorTraits.
 // License: GNU GPL v3
 // ============================================================================
+
 #pragma once
+
+
+// ----------------------------------------------------------------------------
+// includes c++
+// ----------------------------------------------------------------------------
 #include <array>
 #include <cstdint>
 #include <string_view>
 #include <stdexcept>
-#include <FVMGridMaker/Core/namespace.h> // Caminho corrigido
-#include <FVMGridMaker/ErrorHandling/Severity.h>
+
+// ----------------------------------------------------------------------------
+// includes FVMGridMaker
+// ----------------------------------------------------------------------------
+#include <FVMGridMaker/Core/namespace.h>  
 #include <FVMGridMaker/ErrorHandling/ErrorTraits.h>
+#include <FVMGridMaker/ErrorHandling/Severity.h>
 
 /**
  * @file FileErrors.h
@@ -28,7 +38,7 @@ enum class FileErr : std::uint16_t {
     _Min = FileNotFound, _Max = InvalidPath
 };
 
-namespace detail {
+DETAIL_NAMESPACE_OPEN
 using sv = std::string_view;
 
 struct FileErrorInfo {
@@ -38,7 +48,6 @@ struct FileErrorInfo {
     sv ptBR;
 };
 
-// Função constexpr auxiliar que retorna os dados
 constexpr FileErrorInfo get_file_error_info_data(FileErr e) {
     switch (e) {
         case FileErr::FileNotFound:
@@ -56,7 +65,6 @@ constexpr FileErrorInfo get_file_error_info_data(FileErr e) {
     }
 }
 
-// --- CORREÇÃO AQUI: Remove thread_local e retorna diretamente ---
 constexpr FileErrorInfo get_file_info(FileErr e) noexcept {
      if (static_cast<uint16_t>(e) >= static_cast<uint16_t>(FileErr::_Min) &&
          static_cast<uint16_t>(e) <= static_cast<uint16_t>(FileErr::_Max))
@@ -65,9 +73,8 @@ constexpr FileErrorInfo get_file_info(FileErr e) noexcept {
      }
      return {sv{}, Severity::Trace, sv{}, sv{}}; // Retorna valor padrão seguro
 }
-// --- FIM DA CORREÇÃO ---
 
-} // namespace detail
+DETAIL_NAMESPACE_CLOSE
 
 template <> struct ErrorTraits<FileErr> {
     static constexpr std::uint16_t domain_id() noexcept { return 0x0002; }

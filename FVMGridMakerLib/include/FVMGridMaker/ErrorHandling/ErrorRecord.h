@@ -12,9 +12,9 @@
 // ----------------------------------------------------------------------------
 // includes c++
 // ----------------------------------------------------------------------------
-#include <chrono>
-#include <cstdint>
-#include <string>
+// #include <chrono>
+// #include <cstdint>
+// #include <string>
 #include <thread>
 
 
@@ -29,7 +29,7 @@
  * @ingroup error
  */
 FVMGRIDMAKER_NAMESPACE_OPEN
-namespace error {
+ERROR_NAMESPACE_OPEN
 /** @brief Guarda toda informação sobre um evento de erro logado. */
 struct ErrorRecord {
     std::uint32_t code{0}; ///< Código de erro único (domain << 16 | value)
@@ -39,5 +39,6 @@ struct ErrorRecord {
         std::chrono::system_clock::now()};
     std::thread::id tid{std::this_thread::get_id()}; ///< ID da thread
 };
-} // namespace error
+
+ERROR_NAMESPACE_CLOSE
 FVMGRIDMAKER_NAMESPACE_CLOSE

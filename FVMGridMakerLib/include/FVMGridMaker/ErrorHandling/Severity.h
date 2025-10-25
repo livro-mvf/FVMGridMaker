@@ -6,6 +6,10 @@
 // License: GNU GPL v3
 // ============================================================================
 #pragma once
+
+// ----------------------------------------------------------------------------
+// includes FVMGridMaker
+// ----------------------------------------------------------------------------
 #include <FVMGridMaker/Core/namespace.h>
 
 /**
@@ -13,8 +17,9 @@
  * @brief Define os níveis de severidade para logging.
  * @ingroup error
  */
+
 FVMGRIDMAKER_NAMESPACE_OPEN
-namespace error {
+ERROR_NAMESPACE_OPEN
 /** @brief Nível de severidade do log. */
 enum class Severity {
     Trace   = 0, ///< Detalhes finos de depuração.
@@ -24,8 +29,6 @@ enum class Severity {
     Error   = 4, ///< Erros que podem impedir a operação normal.
     Fatal   = 5  ///< Erros críticos que devem abortar a operação.
 };
-} // namespace error
-FVMGRIDMAKER_NAMESPACE_CLOSE
 
-// --- REMOVIDO DAQUI ---
-// #include <FVMGridMaker/ErrorHandling/FileErrors.h> // INCORRETO ESTAR AQUI
+ERROR_NAMESPACE_CLOSE
+FVMGRIDMAKER_NAMESPACE_CLOSE

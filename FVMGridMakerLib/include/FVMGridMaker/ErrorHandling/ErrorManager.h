@@ -1,16 +1,26 @@
-// ============================================================================
+// ----------------------------------------------------------------------------
 // File: ErrorManager.h
 // Author: FVMGridMaker Team
-// Version: 1.0 (Adaptado)
+// Version: 1.0 
 // Description: Fachada de gerenciamento de erros e logger padrão.
 // License: GNU GPL v3
-// ============================================================================
+// ----------------------------------------------------------------------------
 #pragma once
-#include <vector> // Incluído para std::vector
-#include <memory> // Incluído para std::shared_ptr
-#include <FVMGridMaker/ErrorHandling/IErrorLogger.h>
+
+
+// ----------------------------------------------------------------------------
+// includes c++
+// ----------------------------------------------------------------------------
+#include <memory> 
+#include <vector> 
+
+
+// ----------------------------------------------------------------------------
+// includes FVMGridMaker
+// ----------------------------------------------------------------------------
 #include <FVMGridMaker/ErrorHandling/ErrorConfig.h>
-#include <FVMGridMaker/ErrorHandling/ErrorRecord.h> // Incluído para ErrorRecord
+#include <FVMGridMaker/ErrorHandling/ErrorRecord.h> 
+#include <FVMGridMaker/ErrorHandling/IErrorLogger.h>
 
 /**
  * @file ErrorManager.h
@@ -18,7 +28,7 @@
  * @ingroup error
  */
 FVMGRIDMAKER_NAMESPACE_OPEN
-namespace error {
+ERROR_NAMESPACE_OPEN
 
 /**
  * @brief Logger padrão que armazena erros em um buffer thread-local.
@@ -79,5 +89,6 @@ public:
         return {};
     }
 };
-} // namespace error
+
+ERROR_NAMESPACE_CLOSE
 FVMGRIDMAKER_NAMESPACE_CLOSE

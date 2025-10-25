@@ -1,14 +1,24 @@
-// ============================================================================
+// ----------------------------------------------------------------------------
 // File: FVMGException.h
 // Author: FVMGridMaker Team
-// Version: 1.0 (Criado e Adaptado)
-// Description: Classe de exceção base para a biblioteca (RNF08).
+// Version: 1.0  
+// Description: Classe de exceção base para a biblioteca.
 // License: GNU GPL v3
-// ============================================================================
+// ----------------------------------------------------------------------------
+
 #pragma once
-#include <stdexcept>
-#include <string>
-#include <FVMGridMaker/ErrorHandling/ErrorRecord.h> // Inclui ErrorRecord
+
+
+// ----------------------------------------------------------------------------
+// includes c++
+// ----------------------------------------------------------------------------
+// #include <stdexcept>
+// #include <string>
+
+// ----------------------------------------------------------------------------
+// includes FVMGridMaker
+// ----------------------------------------------------------------------------
+#include <FVMGridMaker/ErrorHandling/ErrorRecord.h>  
 
 /**
  * @file FVMGException.h
@@ -16,7 +26,7 @@
  * @ingroup error
  */
 FVMGRIDMAKER_NAMESPACE_OPEN
-namespace error {
+ERROR_NAMESPACE_OPEN
 
 /**
  * @brief Classe de exceção base para FVMGridMaker.
@@ -57,8 +67,8 @@ public:
 
 private:
     ErrorRecord record_;
-    // Cache para garantir que what() retorne um ponteiro válido
     mutable std::string what_cache_;
 };
-} // namespace error
+
+ERROR_NAMESPACE_CLOSE
 FVMGRIDMAKER_NAMESPACE_CLOSE

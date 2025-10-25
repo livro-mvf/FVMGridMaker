@@ -1,10 +1,10 @@
-// ============================================================================
+// ----------------------------------------------------------------------------
 // File: IErrorLogger.h
 // Author: FVMGridMaker Team
 // Version: 1.0  
 // Description: Interface abstrata para "sinks" de log.
 // License: GNU GPL v3
-// ============================================================================
+// ----------------------------------------------------------------------------
 
 #pragma once
 
@@ -16,7 +16,7 @@
 // ----------------------------------------------------------------------------
 // includes FVMGridMaker
 // ----------------------------------------------------------------------------
-#include <FVMGridMaker/ErrorHandling/ErrorRecord.h> // Dependência adaptada
+#include <FVMGridMaker/ErrorHandling/ErrorRecord.h>  
 
 /**
  * @file IErrorLogger.h

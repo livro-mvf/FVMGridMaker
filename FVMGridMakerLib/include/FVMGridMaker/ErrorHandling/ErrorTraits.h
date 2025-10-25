@@ -1,17 +1,25 @@
-// ============================================================================
+// ----------------------------------------------------------------------------
 // File: ErrorTraits.h
 // Project: FVMGridMaker
-// Version: 1.3 (Concept Simplificado para GCC 13)
+// Version: 1.3 
 // Description: Traits para descrever enums de erro (extensível).
 // License: GNU GPL v3
-// ============================================================================
+// ----------------------------------------------------------------------------
 #pragma once
+
+// ----------------------------------------------------------------------------
+// includes c++
+// ----------------------------------------------------------------------------
+// #include <concepts>
 #include <cstdint>
-#include <string_view>
-#include <concepts>
+// #include <string_view>
 #include <type_traits>
-#include <FVMGridMaker/ErrorHandling/Severity.h>
+
+// ----------------------------------------------------------------------------
+// includes FVMGridMaker
+// ----------------------------------------------------------------------------
 #include <FVMGridMaker/Core/namespace.h>
+#include <FVMGridMaker/ErrorHandling/Severity.h>
 
 /**
  * @file ErrorTraits.h
@@ -19,7 +27,7 @@
  * @ingroup ErrorHandling
  */
 FVMGRIDMAKER_NAMESPACE_OPEN
-namespace error {
+ERROR_NAMESPACE_OPEN
 
 template <class T> struct ErrorTraits; // Declaração primária
 
@@ -56,5 +64,5 @@ constexpr std::uint32_t code(E err_enum) noexcept {
                      static_cast<std::uint16_t>(err_enum));
 }
 
-} // namespace error
+ERROR_NAMESPACE_CLOSE
 FVMGRIDMAKER_NAMESPACE_CLOSE

@@ -1,7 +1,5 @@
 # ------------------------------------------------------------
-# tests/CMakeLists.txt
-# - Versão 2.5: Corrige CTest - Usa COMMAND ${test_name}
-#   e WORKING_DIRECTORY na definição do teste.
+# tests/CMakeLists.txt - Versão Simplificada
 # ------------------------------------------------------------
 include(CTest)
 
@@ -17,19 +15,20 @@ file(GLOB_RECURSE TEST_SOURCES CONFIGURE_DEPENDS
 
 message(STATUS "[tests] Encontrando testes...")
 
+if(NOT googletest_SOURCE_DIR)
+    message(FATAL_ERROR "[tests] googletest_SOURCE_DIR não está definido.")
+endif()
+
 foreach(test_source IN LISTS TEST_SOURCES)
     get_filename_component(test_name ${test_source} NAME_WE)
-    get_filename_component(test_dir_abs "${test_source}" DIRECTORY)
-    file(RELATIVE_PATH test_dir_rel "${CMAKE_CURRENT_SOURCE_DIR}" "${test_dir_abs}")
-    # Caminho absoluto para o diretório de saída do executável
-    set(test_output_dir "${CMAKE_BINARY_DIR}/tests/${test_dir_rel}")
-
+    
     message(STATUS "  - Configurando teste: ${test_name}")
 
     add_executable(${test_name} ${test_source})
 
-    # Propriedades C++20
+    # Define explicitamente onde o executável será gerado
     set_target_properties(${test_name} PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
         CXX_STANDARD 20
         CXX_STANDARD_REQUIRED ON
         CXX_EXTENSIONS OFF
@@ -38,7 +37,6 @@ foreach(test_source IN LISTS TEST_SOURCES)
     # Flag -fconcepts para GCC < 10
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 10.0)
         target_compile_options(${test_name} PRIVATE -fconcepts)
-        message(STATUS " -- Adding -fconcepts flag for ${test_name} (GCC < 10 detected)")
     endif()
 
     # Linkagem
@@ -49,29 +47,36 @@ foreach(test_source IN LISTS TEST_SOURCES)
 
     # Includes
     target_include_directories(${test_name} PRIVATE
-        ${FVMG_INCLUDE_DIR}
+        SYSTEM "${googletest_SOURCE_DIR}/googletest/include"
+        SYSTEM "${googletest_SOURCE_DIR}/googlemock/include"
+        "${FVMG_INCLUDE_DIR}"
     )
 
-    # Propriedades de RPATH e diretório de saída do executável
-    set_target_properties(${test_name} PROPERTIES INSTALL_RPATH "$ORIGIN")
-    set_target_properties(${test_name} PROPERTIES BUILD_RPATH "${FVMG_OUTPUT_BIN_DIR}")
-    # Define onde o *make* coloca o executável
-    set_target_properties(${test_name} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${test_output_dir}")
-
-    # --- CORREÇÃO AQUI ---
-    # Adiciona ao CTest:
-    # COMMAND é apenas o nome do executável/alvo.
-    # WORKING_DIRECTORY diz ao CTest para entrar nessa pasta antes de rodar COMMAND.
-    add_test(NAME ${test_name} COMMAND ${test_name})
-    set_tests_properties(${test_name} PROPERTIES WORKING_DIRECTORY "${test_output_dir}")
+    # --- CORREÇÃO SIMPLIFICADA ---
+    # Usa caminho absoluto explícito
+    set(test_executable_path "${CMAKE_CURRENT_BINARY_DIR}/${test_name}")
+    
+    add_test(
+        NAME ${test_name}
+        COMMAND "${test_executable_path}"
+    )
     # --- FIM DA CORREÇÃO ---
 
-    # Alvo run_... (executa diretamente, não muda)
+    # Alvo run_... individual
     add_custom_target(run_${test_name}
         DEPENDS ${test_name}
-        COMMAND ${test_name} # 'make' sabe onde encontrar o alvo ${test_name}
-        WORKING_DIRECTORY "${test_output_dir}"
+        COMMAND "${test_executable_path}"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
         COMMENT "Executando teste ${test_name} (via GTest)..."
     )
 
 endforeach()
+
+# Garante que run_all_tests depende de todos os testes
+set(TEST_TARGETS)
+foreach(test_source IN LISTS TEST_SOURCES)
+    get_filename_component(test_name ${test_source} NAME_WE)
+    list(APPEND TEST_TARGETS ${test_name})
+endforeach()
+
+add_dependencies(run_all_tests ${TEST_TARGETS})

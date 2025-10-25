@@ -2,6 +2,7 @@
 # Root CMakeLists.txt for FVMGridMaker
 # ------------------------------------------------------------
 cmake_minimum_required(VERSION 3.15)
+cmake_policy(SET CMP0135 NEW)
 
 # Definição do projeto
 project(FVMGridMaker VERSION 1.0 LANGUAGES CXX)

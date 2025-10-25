@@ -12,11 +12,11 @@
 // includes FVMGridMaker
 // ----------------------------------------------------------------------------
 //#include <FVMGridMaker/ErrorHandling/ErrorConfig.h>
-#include <FVMGridMaker/ErrorHandling/ErrorManager.h>
-#include <FVMGridMaker/ErrorHandling/ErrorRecord.h>
-#include <FVMGridMaker/ErrorHandling/ErrorTraits.h>
-#include <FVMGridMaker/ErrorHandling/Language.h>
-#include <FVMGridMaker/ErrorHandling/Severity.h>
+// #include <FVMGridMaker/ErrorHandling/ErrorManager.h>
+// #include <FVMGridMaker/ErrorHandling/ErrorRecord.h>
+// #include <FVMGridMaker/ErrorHandling/ErrorTraits.h>
+// #include <FVMGridMaker/ErrorHandling/Language.h>
+// #include <FVMGridMaker/ErrorHandling/Severity.h>
 
 /**
  * @file Detail.h
@@ -24,9 +24,8 @@
  * @ingroup error
  */
 FVMGRIDMAKER_NAMESPACE_OPEN
-namespace error {
-/** @brief Namespace para detalhes internos de implementação. */
-namespace detail {
+ERROR_NAMESPACE_OPEN
+DETAIL_NAMESPACE_OPEN
 
 /**
  * @brief Função interna para logar um erro com placeholders.
@@ -76,6 +75,6 @@ inline void log_error(
         .code = code(err_enum), .severity = sev, .message = std::move(out)});
 }
 
-} // namespace detail
-} // namespace error
+DETAIL_NAMESPACE_CLOSE
+ERROR_NAMESPACE_CLOSE
 FVMGRIDMAKER_NAMESPACE_CLOSE

@@ -1,13 +1,19 @@
-// ============================================================================
+// ----------------------------------------------------------------------------
 // File: Status.h
 // Author: FVMGridMaker Team
-// Version: 1.0 (Criado)
+// Version: 1.0  
 // Description: Objeto Status para política de não-exceção.
 // License: GNU GPL v3
-// ============================================================================
+// ----------------------------------------------------------------------------
 #pragma once
-#include <FVMGridMaker/ErrorHandling/ErrorRecord.h> // Inclui ErrorRecord
-#include <FVMGridMaker/Core/namespace.h>       // Inclui macros de namespace
+
+
+// ----------------------------------------------------------------------------
+// includes FVMGridMaker
+// ----------------------------------------------------------------------------
+#include <FVMGridMaker/Core/namespace.h>      
+// #include <FVMGridMaker/ErrorHandling/ErrorRecord.h>  
+  
 
 /**
  * @file Status.h
@@ -15,7 +21,7 @@
  * @ingroup error
  */
 FVMGRIDMAKER_NAMESPACE_OPEN
-namespace error {
+ERROR_NAMESPACE_OPEN
 
 /**
  * @brief Objeto que armazena um status (OK ou um erro).
@@ -34,7 +40,6 @@ public:
     bool ok() const noexcept { return ok_; }
     /** @brief Retorna o registro de erro (válido apenas se !ok()). */
     const ErrorRecord& record() const {
-        // Poderia adicionar um assert(!ok_) aqui em modo Debug
         return record_;
     }
 
@@ -43,10 +48,9 @@ public:
 
 private:
     bool ok_;
-    ErrorRecord record_; // Contém o erro se ok_ == false
+    ErrorRecord record_; 
 };
 
-// TODO: Adicionar classe StatusOr<T> se necessário
 
-} // namespace error
+ERROR_NAMESPACE_CLOSE
 FVMGRIDMAKER_NAMESPACE_CLOSE
