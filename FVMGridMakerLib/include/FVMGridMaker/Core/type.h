@@ -1,65 +1,49 @@
-//==============================================================================
-// Name         : type.h
-// Author       : Joao Flavio Vieira de Vasconcellos
-// Version      : 1.0
-// Description  : Define os tipos numéricos centrais (Real, Index) e aliases
-//              : de contêineres STL para a biblioteca FVMGridMaker.
-// License      : GNU GPL v3
-//==============================================================================
-
+// ----------------------------------------------------------------------------
+/* File: type.h
+ * Author: FVMGridMaker Team
+ * Version: 1.1
+ * Date: 2025-10-25
+ * Description: Tipos básicos do projeto (Real, Index) com seleção por macro.
+ * License: GNU GPL v3
+ */
+// ----------------------------------------------------------------------------
 #pragma once
 
-/**
- * @file type.h
- * @brief Define os tipos numéricos centrais e aliases da STL.
- *
- * Este header centraliza os tipos escalares usados para cálculos (Real)
- * e para indexação (Index), conforme RF13 e RNF05.
- *
- * @ingroup core
- */
+// ----------------------------------------------------------------------------
+// includes C++ 
+// ----------------------------------------------------------------------------
+#include <cstddef>    // std::size_t
+#include <cstdint>    // inteiros fixos (se precisar em outros headers)
 
-//==============================================================================
-//  C++ includes
-//==============================================================================
-#include <cstdint>
-#include <memory>
-#include <list>
-#include <vector>
-
-//==============================================================================
-//  FVMGridMaker includes
-//==============================================================================
-#include <FVMGridMaker/namespace.h>
+// ----------------------------------------------------------------------------
+// includes FVMGridMaker  
+// ----------------------------------------------------------------------------
+#include <FVMGridMaker/Core/namespace.h>
 
 FVMGRIDMAKER_NAMESPACE_OPEN
 CORE_NAMESPACE_OPEN
 
-//------------------------------------------------------------------------------
-// Tipos Numéricos Fundamentais
-//------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+// Seleção do tipo de ponto flutuante (Real)
+//  - Padrão: double
+//  - Para alterar, defina UMA das macros antes de incluir este header:
+//      * FVMG_REAL_IS_FLOAT
+//      * FVMG_REAL_IS_LONG_DOUBLE
+// ----------------------------------------------------------------------------
+#if defined(FVMG_REAL_IS_FLOAT)
+    using Real = float;
+#elif defined(FVMG_REAL_IS_LONG_DOUBLE)
+    using Real = long double;
+#else
+    using Real = double;
+#endif
 
-/**
- * @brief Alias para o tipo de ponto flutuante usado em cálculos.
- * @details Pode ser reconfigurado (ex: para float) via flags de compilação,
- * mas o padrão é double 
- */
-using Real = double;
-
-/**
- * @brief Alias para o tipo de inteiro usado para contagens e índices.
- * @details std::size_t é o tipo nativo do C++ para indexação de arrays,
- * garantindo portabilidade e performance. 
+// ----------------------------------------------------------------------------
+// Indexador inteiro para percorrer malhas/vetores (DOD-friendly).
+//  - Padrão: std::size_t (sem sinal, ilimitado na arquitetura).
+//  - Mantenha consistente em todo o código para evitar casts desnecessários.
+// ----------------------------------------------------------------------------
 using Index = std::size_t;
-
-//------------------------------------------------------------------------------
-// Contêineres STL (baseados nos tipos acima)
-//------------------------------------------------------------------------------
-
-using VecReal  = std::vector<Real>;
-using LstReal  = std::list<Real>;
-using VecIndex = std::vector<Index>;
-using LstIndex = std::list<Index>;
 
 CORE_NAMESPACE_CLOSE
 FVMGRIDMAKER_NAMESPACE_CLOSE

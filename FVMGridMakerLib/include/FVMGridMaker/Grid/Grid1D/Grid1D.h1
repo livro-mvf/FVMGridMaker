@@ -1,0 +1,130 @@
+// ----------------------------------------------------------------------------
+// File: Grid1D.h
+// Author: FVMGridMaker Team
+// Version: 1.1
+// Date: 2025-10-25
+// Description: Classe principal para armazenamento e acesso da malha 1D.
+// License: GNU GPL v3
+// ----------------------------------------------------------------------------
+#pragma once
+
+// ----------------------------------------------------------------------------
+// includes C++  
+// ----------------------------------------------------------------------------
+#include <span>
+#include <utility>
+#include <vector>
+
+// ----------------------------------------------------------------------------
+// includes FVMGridMaker  
+// ----------------------------------------------------------------------------
+#include <FVMGridMaker/core/namespace.h>
+#include <FVMGridMaker/core/type.h>
+#include <FVMGridMaker/ErrorHandling/Status.h>
+
+
+/**
+ * @file Grid1D.h
+ * @brief Immutable façade that owns a 1D FVM grid (faces/centers/deltas).
+ * @details
+ *  Layout (SoA):
+ *   - faces  : size = N + 1  → xf[0..N]
+ *   - centers: size = N      → xc[0..N-1]
+ *   - dF     : size = N      → xf[i+1] - xf[i]
+ *   - dC     : size = N + 1  → { xc[0]-xf[0], xc[i]-xc[i-1], xf[N]-xc[N-1] }
+ *
+ *  No bounds checks. All getters are noexcept and return spans or raw values.
+ *  Build this object via a Builder/policies; this class does not validate.
+ */
+
+FVMGRIDMAKER_NAMESPACE_OPEN
+GRID_NAMESPACE_OPEN  // namespace FVMGridMaker::grid
+
+class Grid1D {
+public:
+    using Real  = FVMGridMaker::core::Real;
+    using Index = FVMGridMaker::core::Index;
+
+    // ------------------------------------------------------------------------
+    // Construction
+    // ------------------------------------------------------------------------
+    /**
+     * @brief Construct from owned vectors (assumed valid and sized properly).
+     * @param faces   size N+1
+     * @param centers size N
+     * @param dF      size N
+     * @param dC      size N+1
+     *
+     * No validation here. Prefer using the Builder to guarantee correctness.
+     */
+    static Grid1D Make(std::vector<Real> faces,
+                       std::vector<Real> centers,
+                       std::vector<Real> dF,
+                       std::vector<Real> dC) noexcept
+    {
+        return Grid1D(std::move(faces), std::move(centers),
+                      std::move(dF),     std::move(dC));
+    }
+
+    Grid1D() = default;
+    Grid1D(const Grid1D&)            = default;
+    Grid1D& operator=(const Grid1D&) = default;
+    Grid1D(Grid1D&&) noexcept        = default;
+    Grid1D& operator=(Grid1D&&) noexcept = default;
+    ~Grid1D() = default;
+
+    // ------------------------------------------------------------------------
+    // Basic info
+    // ------------------------------------------------------------------------
+    [[nodiscard]] Index nVolumes() const noexcept {
+        return static_cast<Index>(m_centers.size());
+    }
+
+    [[nodiscard]] Index nFaces() const noexcept {
+        return static_cast<Index>(m_faces.size());
+    }
+
+    [[nodiscard]] Real xMin() const noexcept { return m_faces.front(); }
+    [[nodiscard]] Real xMax() const noexcept { return m_faces.back();  }
+
+    // ------------------------------------------------------------------------
+    // Element access (no bounds checks)
+    // ------------------------------------------------------------------------
+    [[nodiscard]] Real center(Index i) const noexcept { return m_centers[i]; }
+    [[nodiscard]] Real face(Index j)   const noexcept { return m_faces[j];   }
+    [[nodiscard]] Real deltaF(Index i) const noexcept { return m_deltaF[i];  }
+
+    /**
+     * @brief Δ along centers at k (0..N), with edge rule:
+     *  dC[0] = xc[0] - xf[0], dC[i]=xc[i]-xc[i-1], dC[N]=xf[N]-xc[N-1]
+     */
+    [[nodiscard]] Real deltaC(Index k) const noexcept { return m_deltaC[k];  }
+
+    // ------------------------------------------------------------------------
+    // Views (read-only)
+    // ------------------------------------------------------------------------
+    [[nodiscard]] std::span<const Real> faces()         const noexcept { return m_faces;  }
+    [[nodiscard]] std::span<const Real> centers()       const noexcept { return m_centers;}
+    [[nodiscard]] std::span<const Real> deltasFaces()   const noexcept { return m_deltaF; }
+    [[nodiscard]] std::span<const Real> deltasCenters() const noexcept { return m_deltaC; }
+
+private:
+    // Own all data (SoA)
+    std::vector<Real> m_faces;    // size N+1
+    std::vector<Real> m_centers;  // size N
+    std::vector<Real> m_deltaF;   // size N
+    std::vector<Real> m_deltaC;   // size N+1
+
+    explicit Grid1D(std::vector<Real> faces,
+                    std::vector<Real> centers,
+                    std::vector<Real> dF,
+                    std::vector<Real> dC) noexcept
+        : m_faces(std::move(faces))
+        , m_centers(std::move(centers))
+        , m_deltaF(std::move(dF))
+        , m_deltaC(std::move(dC))
+    {}
+};
+
+GRID_NAMESPACE_CLOSE
+FVMGRIDMAKER_NAMESPACE_CLOSE

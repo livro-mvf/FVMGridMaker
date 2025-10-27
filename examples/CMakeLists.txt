@@ -1,14 +1,14 @@
 # ------------------------------------------------------------
 # examples/CMakeLists.txt
 # - Um executável por pasta que contenha [Ee]x_*.cpp
-# - Adaptado para FVMGridMaker (STL-Only)
-# - Lógica de 'run_...' REVERTIDA (sem CTest)
-# - CORRIGIDO o erro de 'libFVMGridMaker.so not found'
+# - Além dos [Ee]x_*.cpp, inclui automaticamente TODOS os
+#   outros .cpp da mesma pasta (registradores, helpers, etc.),
+#   reproduzindo a estratégia usada em tests/CMakeLists.txt.
+# - Mantém alvos 'examples', 'run_all_examples' e 'run_<alvo>'
+# - NÃO define modo paralelo; apenas detecta e linka TBB se existir.
+#   O programa decide (via #if no .cpp).
 # ------------------------------------------------------------
 cmake_minimum_required(VERSION 3.16)
-
-# NÃO inclua o CTest aqui
-# include(CTest) 
 
 # Políticas úteis
 if(POLICY CMP0167)
@@ -18,38 +18,53 @@ if(POLICY CMP0135)
   cmake_policy(SET CMP0135 NEW)
 endif()
 
-# Standalone (caso rode cmake direto nesta pasta)
+# Standalone (se rodar cmake direto nesta pasta)
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
   project(FVMGridMakerExamples LANGUAGES CXX)
   set(CMAKE_CXX_STANDARD 20)
   set(CMAKE_CXX_STANDARD_REQUIRED ON)
   set(FVMG_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/../FVMGridMakerLib/include")
-  # Se standalone, FVMG_OUTPUT_BIN_DIR não está definido, precisamos de um fallback
-  set(FVMG_OUTPUT_BIN_DIR "${CMAKE_BINARY_DIR}/../bin") 
+  # Fallback para onde a .so fica quando standalone
+  set(FVMG_OUTPUT_BIN_DIR "${CMAKE_BINARY_DIR}/../bin")
 endif()
 
-set(PROJECT_ROOT    "${CMAKE_SOURCE_DIR}")
-set(EXAMPLES_ROOT   "${CMAKE_CURRENT_SOURCE_DIR}")
+set(PROJECT_ROOT  "${CMAKE_SOURCE_DIR}")
+set(EXAMPLES_ROOT "${CMAKE_CURRENT_SOURCE_DIR}")
 if(NOT DEFINED FVMG_INCLUDE_DIR)
-    set(FVMG_INCLUDE_DIR "${PROJECT_ROOT}/FVMGridMakerLib/include")
+  set(FVMG_INCLUDE_DIR "${PROJECT_ROOT}/FVMGridMakerLib/include")
 endif()
 
+# ------------------------------------------------------------
+# Descoberta de capacidades (NÃO força modo; só informa disponibilidade)
+# ------------------------------------------------------------
+include(CheckCXXSourceCompiles)
+set(CMAKE_REQUIRED_QUIET TRUE)
+
+check_cxx_source_compiles("
+  #include <execution>
+  int main(){ auto p = std::execution::par; (void)p; return 0; }
+" FVMG_HAVE_PSTL_EXEC)
+
+find_package(TBB QUIET) # não falha se não houver TBB
+
+# ------------------------------------------------------------
 # Alvos agregados
+# ------------------------------------------------------------
 add_custom_target(examples         COMMENT "Compilando todos os exemplos")
-
-# --- REVERSÃO AQUI: 'run_all_examples' volta a ser um alvo agregador simples ---
 add_custom_target(run_all_examples COMMENT "Executando todos os exemplos...")
-# --- FIM DA REVERSÃO ---
 
-
-# 1) Varre recursivamente todos os [Ee]x_*.cpp
-file(GLOB_RECURSE EXAMPLE_CPP_ABS CONFIGURE_DEPENDS "${EXAMPLES_ROOT}/[Ee]x_*.cpp")
+# ------------------------------------------------------------
+# Varre recursivamente todos os [Ee]x_*.cpp
+# ------------------------------------------------------------
+file(GLOB_RECURSE EXAMPLE_CPP_ABS CONFIGURE_DEPENDS
+  "${EXAMPLES_ROOT}/[Ee]x_*.cpp"
+)
 if(EXAMPLE_CPP_ABS STREQUAL "")
   message(STATUS "[examples] Nenhum arquivo [Ee]x_*.cpp encontrado em ${EXAMPLES_ROOT}")
   return()
 endif()
 
-# (A lógica de agrupar por diretório e nomear alvos permanece a mesma...)
+# Lista de diretórios únicos
 set(EXAMPLE_DIRS_ABS "")
 foreach(f_abs IN LISTS EXAMPLE_CPP_ABS)
   get_filename_component(dir_abs "${f_abs}" DIRECTORY)
@@ -58,15 +73,30 @@ endforeach()
 list(REMOVE_DUPLICATES EXAMPLE_DIRS_ABS)
 message(STATUS "[examples] Pastas de exemplos detectadas:")
 
+# ------------------------------------------------------------
+# Cria um alvo por pasta e o respectivo run_<alvo>
+# - Além dos [Ee]x_*.cpp, inclui todos os outros .cpp daquele dir
+#   (registradores, helpers, etc.), assim como fazemos em tests/.
+# ------------------------------------------------------------
 foreach(dir_abs IN LISTS EXAMPLE_DIRS_ABS)
-  file(GLOB EX_SOURCES_THIS_DIR "${dir_abs}/[Ee]x_*.cpp")
+  # Fontes principais (exemplos)
+  file(GLOB EX_SOURCES_THIS_DIR CONFIGURE_DEPENDS "${dir_abs}/[Ee]x_*.cpp")
   if(EX_SOURCES_THIS_DIR STREQUAL "")
     continue()
   endif()
+
+  # Demais .cpp do diretório (extras)
+  file(GLOB ALL_CPP_THIS_DIR CONFIGURE_DEPENDS "${dir_abs}/*.cpp")
+  # Remove os [Ee]x_*.cpp da lista total para ficar só os extras
+  set(EXTRA_CPP_THIS_DIR "${ALL_CPP_THIS_DIR}")
+  list(REMOVE_ITEM EXTRA_CPP_THIS_DIR ${EX_SOURCES_THIS_DIR})
+
+  # Nome do alvo
   file(RELATIVE_PATH dir_rel "${EXAMPLES_ROOT}" "${dir_abs}")
   if(dir_rel STREQUAL "")
     set(dir_rel ".")
   endif()
+
   list(LENGTH EX_SOURCES_THIS_DIR _n_src)
   if(_n_src EQUAL 1)
     list(GET EX_SOURCES_THIS_DIR 0 _only_src)
@@ -77,6 +107,7 @@ foreach(dir_abs IN LISTS EXAMPLE_DIRS_ABS)
     set(target_name "ex_${target_name}")
     message(WARNING "[examples] Pasta '${dir_rel}' contém ${_n_src} exemplos; alvo único '${target_name}'.")
   endif()
+
   if(TARGET "${target_name}")
     string(MD5 _hash "${dir_rel}")
     string(SUBSTRING "${_hash}" 0 8 _short)
@@ -84,23 +115,25 @@ foreach(dir_abs IN LISTS EXAMPLE_DIRS_ABS)
   endif()
 
   message(STATUS "  - ${dir_rel}  -> alvo: ${target_name}")
+  if(NOT EXTRA_CPP_THIS_DIR STREQUAL "")
+    list(LENGTH EXTRA_CPP_THIS_DIR _n_extra)
+    message(STATUS "      + ${_n_extra} arquivo(s) extra(s) .cpp adicionados ao alvo (registradores/helpers/etc.).")
+  endif()
 
-  # Cria alvo
-  add_executable(${target_name} ${EX_SOURCES_THIS_DIR})
+  # Junta fontes principais + extras
+  set(SRCS_FOR_TARGET ${EX_SOURCES_THIS_DIR} ${EXTRA_CPP_THIS_DIR})
+
+  add_executable(${target_name} ${SRCS_FOR_TARGET})
   target_link_libraries(${target_name} PRIVATE FVMGridMaker)
   target_include_directories(${target_name} PRIVATE "${FVMG_INCLUDE_DIR}")
 
-  # --- CORREÇÃO AQUI: Corrige o erro "libFVMGridMaker.so not found" ---
-  # Define o RPATH (runtime search path) para o executável
-  # $ORIGIN é um token especial que significa "a pasta do executável"
-  # FVMG_OUTPUT_BIN_DIR é a pasta build/bin/ onde a .so está
+  # Corrige 'libFVMGridMaker.so not found' ao executar direto
   set_target_properties(${target_name} PROPERTIES
-      INSTALL_RPATH "$ORIGIN" 
-      BUILD_RPATH "${FVMG_OUTPUT_BIN_DIR}"
+    INSTALL_RPATH "$ORIGIN"
+    BUILD_RPATH   "${FVMG_OUTPUT_BIN_DIR}"
   )
-  # --- FIM DA CORREÇÃO ---
 
-  # Define o nome/local de saída
+  # Nome/local de saída
   if(_n_src EQUAL 1)
     set(out_name "${stem}")
   else()
@@ -108,29 +141,47 @@ foreach(dir_abs IN LISTS EXAMPLE_DIRS_ABS)
   endif()
   set_target_properties(${target_name} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${dir_abs}"
-    OUTPUT_NAME "${out_name}"
+    OUTPUT_NAME              "${out_name}"
   )
 
-  # Otimizações
+  # Otimizações (se a função util existir no projeto)
   if(COMMAND set_target_optimizations)
     set_target_optimizations(${target_name})
   endif()
 
-  # --- REVERSÃO AQUI: Alvos auxiliares voltam a rodar o comando direto ---
-  
-  # 1. Dependência de compilação
+  # ----------------------------------------------------------
+  # Apenas sinaliza disponibilidade e faz link SE existir TBB.
+  # (O programa decide usar ou não a via paralela.)
+  # ----------------------------------------------------------
+  if(FVMG_HAVE_PSTL_EXEC)
+    target_compile_definitions(${target_name} PRIVATE FVMG_HAVE_PSTL_EXEC=1)
+  else()
+    target_compile_definitions(${target_name} PRIVATE FVMG_HAVE_PSTL_EXEC=0)
+  endif()
+
+  if(TBB_FOUND)
+    target_compile_definitions(${target_name} PRIVATE FVMG_HAVE_TBB=1)
+    target_link_libraries(${target_name} PRIVATE TBB::tbb)
+  else()
+    target_compile_definitions(${target_name} PRIVATE FVMG_HAVE_TBB=0)
+  endif()
+
+  # Agrega em 'examples'
   add_dependencies(examples ${target_name})
 
-  # 2. Cria o alvo 'run_Ex_Calculator'
+  # run_<alvo>
   add_custom_target(run_${target_name}
     DEPENDS ${target_name}
-    COMMAND "${dir_abs}/${out_name}" # Comando direto
+    COMMAND "${dir_abs}/${out_name}"
     WORKING_DIRECTORY "${dir_abs}"
     COMMENT "Executando exemplo ${out_name} (${dir_rel})"
   )
-  
-  # 3. Adiciona dependência ao alvo agregador
   add_dependencies(run_all_examples run_${target_name})
-  
-  # --- FIM DA REVERSÃO ---
 endforeach()
+
+# ------------------------------------------------------------
+# Resumo (só para log)
+# ------------------------------------------------------------
+message(STATUS "Resumo (detecção para TODOS os exemplos):")
+message(STATUS "  TBB_FOUND           = ${TBB_FOUND}")
+message(STATUS "  FVMG_HAVE_PSTL_EXEC = ${FVMG_HAVE_PSTL_EXEC}")

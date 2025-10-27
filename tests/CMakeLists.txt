@@ -1,5 +1,5 @@
 # ------------------------------------------------------------
-# tests/CMakeLists.txt - Versão Simplificada
+# tests/CMakeLists.txt - Descoberta e montagem dos testes
 # ------------------------------------------------------------
 include(CTest)
 
@@ -9,8 +9,9 @@ add_custom_target(run_all_tests
     COMMENT "Executando todos os testes (via ctest)..."
 )
 
-file(GLOB_RECURSE TEST_SOURCES CONFIGURE_DEPENDS
-    "${CMAKE_CURRENT_SOURCE_DIR}/ut_*.cpp"
+# Todos os testes principais começam com ut_*.cpp
+file(GLOB_RECURSE TEST_MAIN_SOURCES CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/**/ut_*.cpp"
 )
 
 message(STATUS "[tests] Encontrando testes...")
@@ -19,14 +20,31 @@ if(NOT googletest_SOURCE_DIR)
     message(FATAL_ERROR "[tests] googletest_SOURCE_DIR não está definido.")
 endif()
 
-foreach(test_source IN LISTS TEST_SOURCES)
-    get_filename_component(test_name ${test_source} NAME_WE)
-    
-    message(STATUS "  - Configurando teste: ${test_name}")
+set(ALL_TEST_TARGETS)
 
-    add_executable(${test_name} ${test_source})
+foreach(test_main IN LISTS TEST_MAIN_SOURCES)
+    get_filename_component(test_name ${test_main} NAME_WE)
+    get_filename_component(test_dir  ${test_main} DIRECTORY)
 
-    # Define explicitamente onde o executável será gerado
+    message(STATUS "  - Configurando teste: ${test_name} (dir: ${test_dir})")
+
+    # Colete todos os .cpp auxiliares no mesmo diretório do teste principal
+    file(GLOB helper_srcs CONFIGURE_DEPENDS "${test_dir}/*.cpp")
+
+    # Remova o próprio arquivo ut_*.cpp da lista de helpers
+    list(REMOVE_ITEM helper_srcs "${test_main}")
+
+    # Remova quaisquer outros ut_*.cpp para evitar múltiplos mains
+    foreach(s IN LISTS helper_srcs)
+        if(s MATCHES ".*/ut_.*\\.cpp$")
+            list(REMOVE_ITEM helper_srcs "${s}")
+        endif()
+    endforeach()
+
+    # Monte o executável do teste com o main + helpers do diretório
+    add_executable(${test_name} ${test_main} ${helper_srcs})
+
+    # Saída e padrão de compilação
     set_target_properties(${test_name} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
         CXX_STANDARD 20
@@ -34,7 +52,7 @@ foreach(test_source IN LISTS TEST_SOURCES)
         CXX_EXTENSIONS OFF
     )
 
-    # Flag -fconcepts para GCC < 10
+    # -fconcepts para GCC antigos
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 10.0)
         target_compile_options(${test_name} PRIVATE -fconcepts)
     endif()
@@ -52,31 +70,19 @@ foreach(test_source IN LISTS TEST_SOURCES)
         "${FVMG_INCLUDE_DIR}"
     )
 
-    # --- CORREÇÃO SIMPLIFICADA ---
-    # Usa caminho absoluto explícito
-    set(test_executable_path "${CMAKE_CURRENT_BINARY_DIR}/${test_name}")
-    
-    add_test(
-        NAME ${test_name}
-        COMMAND "${test_executable_path}"
-    )
-    # --- FIM DA CORREÇÃO ---
+    # Caminho absoluto do executável para ctest e alvos run_*
+    set(test_exe "${CMAKE_CURRENT_BINARY_DIR}/${test_name}")
 
-    # Alvo run_... individual
+    add_test(NAME ${test_name} COMMAND "${test_exe}")
+
     add_custom_target(run_${test_name}
         DEPENDS ${test_name}
-        COMMAND "${test_executable_path}"
+        COMMAND "${test_exe}"
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
         COMMENT "Executando teste ${test_name} (via GTest)..."
     )
 
+    list(APPEND ALL_TEST_TARGETS ${test_name})
 endforeach()
 
-# Garante que run_all_tests depende de todos os testes
-set(TEST_TARGETS)
-foreach(test_source IN LISTS TEST_SOURCES)
-    get_filename_component(test_name ${test_source} NAME_WE)
-    list(APPEND TEST_TARGETS ${test_name})
-endforeach()
-
-add_dependencies(run_all_tests ${TEST_TARGETS})
+add_dependencies(run_all_tests ${ALL_TEST_TARGETS})

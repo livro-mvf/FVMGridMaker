@@ -1,0 +1,37 @@
+// ----------------------------------------------------------------------------
+// File: ExecPolicy.hpp
+// Author: FVMGridMaker Team
+// Version: 1.0
+// Date: 2025-10-25
+// Description: Seleção do execution policy padrão sem dependências externas.
+//              Por default usa unseq (vetorização, sem threads).
+//              Defina FVMG_ENABLE_PSTL_PAR se quiser par_unseq (requer TBB).
+// License: GNU GPL v3
+// ----------------------------------------------------------------------------
+#pragma once
+
+// ----------------------------------------------------------------------------
+// includes C++ 
+// ----------------------------------------------------------------------------
+#include <execution>
+
+// ----------------------------------------------------------------------------
+// includes FVMGridMaker  
+// ----------------------------------------------------------------------------
+#include <FVMGridMaker/Core/namespace.h>
+
+FVMGRIDMAKER_NAMESPACE_OPEN
+CORE_NAMESPACE_OPEN
+
+#ifndef FVMG_EXEC_POLICY
+  #if defined(FVMG_ENABLE_PSTL_PAR)
+    // ATENÇÃO: isto exigirá TBB na linkedição
+    #define FVMG_EXEC_POLICY std::execution::par_unseq
+  #else
+    // Sem dependência externa (vetorização apenas)
+    #define FVMG_EXEC_POLICY std::execution::unseq
+  #endif
+#endif
+
+CORE_NAMESPACE_CLOSE
+FVMGRIDMAKER_NAMESPACE_CLOSE

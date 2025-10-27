@@ -1,0 +1,35 @@
+// ----------------------------------------------------------------------------
+// File: Options1D.hpp
+// Author: FVMGridMaker Team
+// Version: 1.1
+// Date: 2025-10-25
+// Description: Opções para geração de malha 1D (domínio, N, seed, dx_min).
+// License: GNU GPL v3
+// ----------------------------------------------------------------------------
+#pragma once
+
+// ----------------------------------------------------------------------------
+// includes C++ 
+// ----------------------------------------------------------------------------
+#include <cstdint>
+
+// ----------------------------------------------------------------------------
+// includes FVMGridMaker  
+// ----------------------------------------------------------------------------
+#include <FVMGridMaker/Core/constants.h>
+#include <FVMGridMaker/Core/namespace.h>
+#include <FVMGridMaker/Core/type.h>
+
+FVMGRIDMAKER_NAMESPACE_OPEN
+GRID_NAMESPACE_OPEN  // namespace FVMGridMaker::grid
+
+struct Options1D {
+    core::Index   N      {0};                       ///< number of cells
+    core::Real    A      {core::Real(0)};           ///< first face
+    core::Real    B      {core::Real(1)};           ///< last face
+    std::uint64_t seed   {0};                       ///< RNG seed
+    core::Real    dx_min {core::constants::kDefaultDxMin}; ///< min spacing
+};
+
+GRID_NAMESPACE_CLOSE
+FVMGRIDMAKER_NAMESPACE_CLOSE
